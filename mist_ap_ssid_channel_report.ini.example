@@ -1,0 +1,33 @@
+; Settings for mist_ap_ssid_channel_report.py
+; Copy this file to mist_ap_ssid_channel_report.ini and add your API token.
+; mist_ap_ssid_channel_report.ini is git-ignored so your token is never committed.
+
+[mist]
+; Your Mist cloud API host, e.g. https://api.mist.com (Global 01), https://api.eu.mist.com (EMEA 01),
+; https://api.gc3.mist.com (EMEA 02) - use the one that matches your dashboard URL
+api_host = https://api.eu.mist.com
+api_token = PASTE_YOUR_API_TOKEN_HERE
+; Your Mist org ID (Organization > Settings in the Mist dashboard)
+org_id = PASTE_YOUR_ORG_ID_HERE
+
+[run]
+; Only check sites whose name contains this text (leave blank for all sites)
+; e.g. SITE-01 to test on one site first
+site_name_filter =
+; Seconds to pause between API calls (about 3 calls per site, so 0 is fine for most orgs)
+pause_between_calls = 0
+; Folder for the Excel report (. = current folder, ~ = your home folder)
+; Filename is ap_ssid_channel_report_<org name>_<site filter or ALL-SITES>_<date_time>UTC.xlsx
+report_folder = .
+
+[network]
+; Only needed behind a company HTTPS proxy such as Zscaler - leave as is otherwise.
+; Trust the Windows/macOS certificate store (needs truststore, installed by requirements.txt)
+use_system_certs = true
+; Or give the path to your company's root certificate (.pem) - leave blank if not needed
+ca_bundle =
+; Last resort only: false turns certificate checking off completely
+verify_ssl = true
+; Explicit proxies - usually not needed, HTTP_PROXY / HTTPS_PROXY environment variables are used anyway
+http_proxy =
+https_proxy =
