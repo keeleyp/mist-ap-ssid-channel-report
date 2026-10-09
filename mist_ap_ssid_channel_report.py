@@ -510,21 +510,57 @@ for row_num in range(2, ws.max_row + 1):
     if ws.cell(row=row_num, column=check_col + 1).value:
         ws.cell(row=row_num, column=check_col + 1).fill = red_fill
 
-# --- sheet 2: one row per AP / band / SSID ---
-detail_headers = ["Site", "AP name", "AP MAC", "Model", "Status", "Device Profile", "Band", "Channel",
-                  "Width (MHz)", "Power (dBm)", "Radio on", "SSID", "WLAN ID", "Comes from", "Auth",
-                  "VLAN", "Hidden", "Note"]
-detail_rows.sort(key=lambda r: (str(r[0]).lower(), str(r[1]).lower(), BANDS.index([k for k, v in BAND_NAMES.items() if v == r[6]][0]), str(r[11]).lower()))
-add_sheet(wb, "AP SSID Detail", detail_headers, detail_rows,
+# --- sheet 2: one row per AP, one column per SSID / band ---
+# One column per SSID / band combination seen in the org, e.g. "CORP @ 2.4GHz", "CORP @ 5GHz"
+# (by SSID name, so different WLAN IDs with the same SSID share a column).
+# The cell is the channel if the AP publishes that SSID on that band with the radio on,
+# "Yes" if it's configured but the AP isn't connected or the radio is off, blank if not published.
+band_key_by_name = {v: k for k, v in BAND_NAMES.items()}
+combos = sorted(set([(r[11], band_key_by_name[r[6]]) for r in detail_rows]),
+                key=lambda c: (str(c[0]).lower(), BANDS.index(c[1])))
+combo_col = {}
+for i, combo in enumerate(combos):
+    combo_col[combo] = i
+
+grid_by_mac = {}
+for r in ap_rows:
+    # ap_rows: 0 site, 1 name, 2 mac, 3 model, 6 status, 8 Device Profile, then 8 columns per band (channel first)
+    config_count = r[9 + 6] + r[17 + 6] + r[25 + 6]
+    grid_by_mac[r[2]] = [r[0], r[1], r[2], r[3], r[6], r[8], r[9], r[17], r[25], config_count] + [None] * len(combos)
+for r in detail_rows:
+    grid_row = grid_by_mac.get(r[2])
+    if grid_row is None:
+        continue
+    value = r[7] if (r[10] == "yes" and r[7] not in (None, "")) else "Yes"
+    grid_row[10 + combo_col[(r[11], band_key_by_name[r[6]])]] = value
+grid_rows = sorted(grid_by_mac.values(), key=lambda r: (str(r[0]).lower(), str(r[1]).lower()))
+
+grid_headers = ["Site", "AP name", "AP MAC", "Model", "Status", "Device Profile",
+                "2.4GHz channel", "5GHz channel", "6GHz channel", "SSIDs (config, all bands)"]
+combo_headers = [str(ssid) + " @ " + BAND_NAMES[band] for ssid, band in combos]
+ws = add_sheet(wb, "AP SSID Detail", grid_headers + combo_headers, grid_rows,
+               [28, 22, 15, 8, 12, 40, 9, 9, 9, 10] + [12] * len(combos))
+ws.row_dimensions[1].height = 48
+for i, band in enumerate(BANDS):
+    ws.cell(row=1, column=7 + i).fill = band_fills[band]
+for i, (ssid, band) in enumerate(combos):
+    ws.cell(row=1, column=len(grid_headers) + 1 + i).fill = band_fills[band]
+
+# --- sheet 3: one row per AP / band / SSID (WLAN ID, Template, auth, VLAN) ---
+list_headers = ["Site", "AP name", "AP MAC", "Model", "Status", "Device Profile", "Band", "Channel",
+                "Width (MHz)", "Power (dBm)", "Radio on", "SSID", "WLAN ID", "Comes from", "Auth",
+                "VLAN", "Hidden", "Note"]
+detail_rows.sort(key=lambda r: (str(r[0]).lower(), str(r[1]).lower(), BANDS.index(band_key_by_name[r[6]]), str(r[11]).lower()))
+add_sheet(wb, "AP SSID WLAN List", list_headers, detail_rows,
           [28, 22, 15, 8, 12, 40, 8, 9, 8, 8, 10, 24, 38, 40, 10, 10, 8, 24])
 
-# --- sheet 3: APs that need a look ---
+# --- sheet 4: APs that need a look ---
 check_rows.sort(key=lambda r: (str(r[0]).lower(), str(r[1]).lower()))
 add_sheet(wb, "Needs a Look", ["Site", "AP name", "AP MAC", "Model", "Device Profile",
                                "SSID check (config vs live)", "Outside Device Profile limits"],
           check_rows, [28, 22, 15, 8, 40, 50, 60])
 
-# --- sheet 4: Device Profiles ---
+# --- sheet 5: Device Profiles ---
 templates_for_dp = {}
 for t in templates:
     if t.get("filter_by_deviceprofile"):
@@ -554,7 +590,7 @@ dp_headers = dp_headers + ["WLAN Templates filtered to this profile"]
 add_sheet(wb, "Device Profiles", dp_headers, dp_rows,
           [44, 38, 7, 8, 14, 10, 8, 8, 40, 10, 8, 8, 30, 10, 8, 60])
 
-# --- sheet 5: summary ---
+# --- sheet 6: summary ---
 ws2 = wb.create_sheet("Summary", 0)
 ws2.append(["AP SSID / Channel / Device Profile report"])
 ws2["A1"].font = title_font

@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.0
+
+- AP SSID Detail is now one row per AP, with one column per SSID / band (e.g. `CORP @ 2.4GHz`,
+  `CORP @ 5GHz`) showing the channel that SSID is published on
+- The previous one-row-per-SSID list moves to a new AP SSID WLAN List sheet (WLAN ID, Template, auth, VLAN)
+
 ## v1.0.0
 
 First release.

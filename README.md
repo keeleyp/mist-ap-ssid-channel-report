@@ -29,7 +29,8 @@ A dual-band radio (e.g. `band_24` running as 5GHz) is reported under the band it
 |---|---|
 | Summary | Run details, counts, how everything is worked out, colour key |
 | AP SSIDs by Channel | One row per AP: site, name, MAC, model, serial, firmware, status, uptime, **Device Profile**, then for 2.4 / 5 / 6GHz: **channel**, width, power, antenna gain, clients, **SSIDs**, SSID count (config) and SSID count (live), then the checks |
-| AP SSID Detail | One row per AP / band / SSID: channel, width, power, whether the radio is on, SSID, WLAN ID, the WLAN Template (or site WLAN) it comes from, auth type, VLAN, hidden |
+| AP SSID Detail | One row per AP: site, name, MAC, model, status, Device Profile, channel per band, then **one column per SSID / band** seen in the org (e.g. `CORP @ 2.4GHz`, `CORP @ 5GHz`, by SSID name). The cell is the channel the AP publishes that SSID on, `Yes` if it's configured but the AP isn't connected or the radio is off, blank if not published |
+| AP SSID WLAN List | One row per AP / band / SSID: channel, width, power, whether the radio is on, SSID, WLAN ID, the WLAN Template (or site WLAN) it comes from, auth type, VLAN, hidden |
 | Needs a Look | Connected APs where the SSID check failed, or the channel / power is outside the allowed limits |
 | Device Profiles | Each Device Profile in use: AP count, per-band radio on/disabled, allowed channels, power range, width, and the WLAN Templates filtered to it |
 
